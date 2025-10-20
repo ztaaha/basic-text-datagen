@@ -1,0 +1,12 @@
+{
+  "name": "text-render",
+  "version": "1.0",
+  "dependencies": [
+    "freetype",
+    "harfbuzz",
+    "pybind11",
+    "fmt",
+    "eigen3",
+    "skia"
+  ]
+}
