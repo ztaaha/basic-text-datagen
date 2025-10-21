@@ -1,5 +1,8 @@
 #pragma once
 
+#include "path.h"
+
+
 #include <map>
 #include <string>
 #include <vector>
@@ -7,9 +10,6 @@
 #include <hb.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-
-#include "path.h"
-
 
 class Shaper {
 public:

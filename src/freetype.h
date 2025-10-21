@@ -1,11 +1,11 @@
 #pragma once
 
+#include "shaper.h"
+
+#include <limits>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
-#include "../shaper.h"
-
-using ImageData = Eigen::Tensor<uint8_t, 3, Eigen::RowMajor>;
 static constexpr int IMAGE_DIM = 1;
 
 struct TextBox {
@@ -18,4 +18,11 @@ struct TextBox {
         return {std::numeric_limits<int>::max(), std::numeric_limits<int>::min(),
                 std::numeric_limits<int>::max(), std::numeric_limits<int>::min()};
     }
+};
+
+using ImageData = Eigen::Tensor<uint8_t, 3, Eigen::RowMajor>;
+
+class Freetype {
+public:
+    static ImageData render_text(const Shaper& shaper);
 };

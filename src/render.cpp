@@ -4,7 +4,6 @@
 
 void Renderer::set_font(const std::string& font_path) {
     shaper.done_font();
-    sk.done_font();
 
     std::ifstream font(font_path, std::ios::binary);
     if (!font.is_open())
@@ -16,7 +15,6 @@ void Renderer::set_font(const std::string& font_path) {
     font.close();
 
     shaper.set_font(font_data);
-    sk.set_font(font_data);
 }
 
 TextPaths Renderer::text_paths() {
@@ -27,11 +25,8 @@ TextPaths Renderer::text_paths() {
     return {paths, advances};
 }
 
-ImageData Renderer::render_text(const unsigned font_size, const RenderMode mode) {
+ImageData Renderer::render_text(const unsigned font_size) {
     shaper.shape(font_size);
-    ImageData img =
-        mode == RenderMode::FREETYPE
-            ? lib_opts::Freetype::render_text(shaper)
-            : sk.render_text(shaper, font_size);
+    ImageData img = Freetype::render_text(shaper);
     return img;
 }

@@ -50,9 +50,7 @@ TextBox text_size(const Shaper& shaper) {
 }
 
 
-namespace lib_opts {
-
-ImageData Freetype::render_text(const Shaper &shaper) {
+ImageData Freetype::render_text(const Shaper& shaper) {
     const auto [x_min, x_max, y_min, y_max] = text_size(shaper);
     const auto h = static_cast<Eigen::Index>(y_max - y_min);
     const auto w = static_cast<Eigen::Index>(x_max - x_min);
@@ -99,7 +97,4 @@ ImageData Freetype::render_text(const Shaper &shaper) {
         }
     }
     return img;
-}
-
-
 }

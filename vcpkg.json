@@ -6,7 +6,6 @@
     "harfbuzz",
     "pybind11",
     "fmt",
-    "eigen3",
-    "skia"
+    "eigen3"
   ]
 }

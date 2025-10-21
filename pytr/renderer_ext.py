@@ -7,13 +7,14 @@ from typing import Literal
 from numpy.typing import NDArray
 from uuid import uuid4
 import os
-from path import Path
+import tempfile
 
+from .path import Path
 
 
 ADD_SPANS = """
 ([fontPath, fontName, size, strings]) => {
-    document.querySelector('div').remove();
+    document.querySelectorAll('div').forEach(div => div.remove());
 
 
     const div = document.createElement('div');
@@ -37,6 +38,20 @@ ADD_SPANS = """
 """
 
 
+BASE_HTML = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+</body>
+</html>
+"""
+
+
 class Renderer(renderer.Renderer):
     def __init__(self):
         super().__init__()
@@ -47,15 +62,15 @@ class Renderer(renderer.Renderer):
         return self
     
     def _init_browser(self):
-        base_path = os.path.abspath('base.html').replace('\\', '/')
-        if not os.path.isfile(base_path):
-            raise FileNotFoundError(f"base.html file doesn't exist")
+        self.base_path = os.path.abspath('base.tmp.html').replace('\\', '/')
+        with open(self.base_path, 'w') as f:
+            f.write(BASE_HTML)
     
         self._playwright = sync_playwright().start()
         for name in ['chromium', 'firefox']:
             browser = getattr(self._playwright, name).launch()
             page = browser.new_page(viewport={'width': 10000, 'height': 10000})
-            page.goto(f"file:///{base_path}")
+            page.goto(f"file:///{self.base_path}")
             setattr(self, f"_{name}", browser)
             setattr(self, f"_page_{name}", page)
     
@@ -64,6 +79,7 @@ class Renderer(renderer.Renderer):
             if hasattr(self, f'_{name}'):
                 getattr(self, f'_{name}').close()
         self._playwright.stop()
+        os.remove(self.base_path)
 
     def __enter__(self) -> 'Renderer':
         return self.start_web()
@@ -86,15 +102,15 @@ class Renderer(renderer.Renderer):
     def render_text(
                 self, 
                 size: int, 
-                mode: Literal['freetype', 'chromium', 'firefox', 'skia']
+                mode: Literal['freetype', 'chromium', 'firefox']
             ) -> NDArray[np.uint8]:
         """Render text with size and mode
             
             Image and masks as (I, H, W). I = 0 is image, I > 0 are cluster masks.
         """
 
-        if mode == 'freetype' or mode == 'skia':
-            imgs =  super().render_text(size, mode)
+        if mode == 'freetype':
+            imgs =  super().render_text(size)
         elif mode == 'chromium' or mode == 'firefox':
             imgs = self._web_render_text(size, mode)
         else:
@@ -105,14 +121,13 @@ class Renderer(renderer.Renderer):
 
 
 
-
-
     def _web_render_text(self, size, mode):
-        assert hasattr(self, f'_page_{mode}'), f"{mode} browser not included in renderer initialization"
+        assert hasattr(self, f'_page_{mode}'), f"Browser not initialized, switch modes or use with statement"
         page = getattr(self, f'_page_{mode}')
 
+        super().shape_if_needed()
         strings = super().cluster_strings()
-        id = "font-" + str(uuid4())
+        id = "font" + uuid4().hex
         page.evaluate(ADD_SPANS, [self.font_path, id, size, strings])
         div_locator = page.locator('div')
 
@@ -131,8 +146,5 @@ class Renderer(renderer.Renderer):
             curr_span.evaluate("cluster => { cluster.style.opacity = 0; }")
             
         return np.stack(imgs, axis=0)
-
-
-
 
 

@@ -1,12 +1,8 @@
-#include <limits>
-#include <algorithm>
-
 #include "path.h"
 
-#include <iostream>
-
+#include <limits>
+#include <algorithm>
 #include <fmt/format.h>
-
 #include FT_OUTLINE_H
 
 void Path::add(FT_Outline& outline, const Point& offset) {

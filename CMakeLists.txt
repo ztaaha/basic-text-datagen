@@ -21,7 +21,6 @@ find_package(Freetype REQUIRED)
 find_package(harfbuzz CONFIG REQUIRED)
 find_package(Eigen3 NO_MODULE REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-find_package(unofficial-skia CONFIG REQUIRED)
 
 
 pybind11_add_module(renderer
@@ -29,8 +28,7 @@ pybind11_add_module(renderer
   src/render.cpp
   src/path.cpp
   src/shaper.cpp
-  src/lib_opts/freetype.cpp
-  src/lib_opts/skia.cpp
+  src/freetype.cpp
 )
 
 target_link_libraries(renderer
@@ -39,5 +37,4 @@ target_link_libraries(renderer
     harfbuzz::harfbuzz
     Eigen3::Eigen
     fmt::fmt
-    unofficial::skia::skia
 ) 

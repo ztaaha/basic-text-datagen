@@ -1,7 +1,6 @@
 #include "shaper.h"
 
 #include <stdexcept>
-
 #include <hb-ft.h>
 
 Shaper::Shaper() {

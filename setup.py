@@ -89,5 +89,5 @@ setup(
     name="renderer",
     cmdclass={'build_ext': Build},
     ext_modules=[CMakeExtension("renderer")],
-    packages=['pytr']
+    packages=['pytr'],
 )

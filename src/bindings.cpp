@@ -17,15 +17,9 @@ PYBIND11_MODULE(renderer, m) {
         .def("set_font", &Renderer::set_font)
         .def("set_text", &Renderer::set_text)
         .def("text_paths", &Renderer::text_paths)
-        .def("render_text", [](Renderer& r, const unsigned font_size, const std::string& mode) {
-            if (mode == "freetype")
-                return r.render_text(font_size, RenderMode::FREETYPE);
-            if (mode == "skia")
-                return r.render_text(font_size, RenderMode::SKIA);
-
-            throw std::invalid_argument(fmt::format("Mode {} is not recognized", mode));
-        })
-        .def("cluster_strings", &Renderer::cluster_strings);
+        .def("render_text", &Renderer::render_text)
+        .def("cluster_strings", &Renderer::cluster_strings)
+        .def("shape_if_needed", &Renderer::shape_if_needed);
 
 
     py::class_<Path>(m, "Path")
