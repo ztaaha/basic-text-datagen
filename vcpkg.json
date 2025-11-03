@@ -6,6 +6,8 @@
     "harfbuzz",
     "pybind11",
     "fmt",
-    "eigen3"
+    "eigen3",
+    "cpr",
+    "stb"
   ]
 }

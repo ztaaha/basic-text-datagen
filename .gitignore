@@ -7,3 +7,10 @@ build/
 
 .idea/
 .vscode/
+.vs/
+
+
+
+# temp
+test*.py
+*.txt

@@ -9,6 +9,15 @@ from uuid import uuid4
 import os
 import tempfile
 
+import requests
+from .utils import make_preview_url, trim_img
+from itertools import zip_longest
+from fontTools import ttLib
+import cv2
+import matplotlib.pyplot as plt
+import sys
+from numba import njit, prange
+
 from .path import Path
 
 
@@ -55,6 +64,7 @@ BASE_HTML = """
 class Renderer(renderer.Renderer):
     def __init__(self):
         super().__init__()
+        self.s = requests.Session()
 
 
     def start_web(self) -> 'Renderer':
@@ -89,10 +99,16 @@ class Renderer(renderer.Renderer):
 
 
     def set_font(self, font_path: str):
+        ftf = ttLib.TTFont(font_path)
+        if 'COLR' in ftf or 'SVG ' in ftf or 'CBDT' in ftf or 'sbix' in ftf:
+            raise ValueError("Color fonts are not supported")
         self.font_path = os.path.abspath(font_path).replace('\\', '/')
         super().set_font(self.font_path)
 
     def set_text(self, text: str):
+        if ' ' in text:
+            raise ValueError("Spaces are not supported in text")
+        self.text = text
         super().set_text(text)
 
     def text_paths(self) -> tuple[list[Path], list[float]]:
@@ -102,7 +118,8 @@ class Renderer(renderer.Renderer):
     def render_text(
                 self, 
                 size: int, 
-                mode: Literal['freetype', 'chromium', 'firefox']
+                mode: Literal['freetype', 'chromium', 'firefox', 'myfonts'],
+                myfonts_id: str | None = None
             ) -> NDArray[np.uint8]:
         """Render text with size and mode
             
@@ -110,19 +127,20 @@ class Renderer(renderer.Renderer):
         """
 
         if mode == 'freetype':
-            imgs =  super().render_text(size)
+            imgs =  super().render_text(size, mode)
         elif mode == 'chromium' or mode == 'firefox':
             imgs = self._web_render_text(size, mode)
+        elif mode == 'myfonts':
+            if myfonts_id is None:
+                raise ValueError("myfonts_id required for mode \"myfonts\"")
+            return super().render_text(size, mode, myfonts_id=myfonts_id)
         else:
             raise ValueError(f"Mode \"{mode}\" doesn't exist")
-        
-        nz = np.where(imgs[0] != 255)
-        return imgs[:, min(nz[0]):max(nz[0])+1, min(nz[1]):max(nz[1])+1]
-
-
+  
+        return trim_img(imgs, white_bg=True)
 
     def _web_render_text(self, size, mode):
-        assert hasattr(self, f'_page_{mode}'), f"Browser not initialized, switch modes or use with statement"
+        assert hasattr(self, f'_page_{mode}'), "Browser not initialized, switch modes or use with statement in Renderer initialization"
         page = getattr(self, f'_page_{mode}')
 
         super().shape_if_needed()

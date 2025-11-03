@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include <fstream>
+#include <optional>
 
 void Renderer::set_font(const std::string& font_path) {
     shaper.done_font();
@@ -25,8 +26,17 @@ TextPaths Renderer::text_paths() {
     return {paths, advances};
 }
 
-ImageData Renderer::render_text(const unsigned font_size) {
-    shaper.shape(font_size);
-    ImageData img = Freetype::render_text(shaper);
+ImageData Renderer::render_text(const unsigned font_size, const RenderMode mode, std::optional<std::string> myfonts_id) {
+    ImageData img;
+    switch (mode) {
+        case RenderMode::FREETYPE:
+            shaper.shape(font_size, 72);
+            img = Freetype::render_text(shaper);
+            break;
+        case RenderMode::MYFONTS:
+            shaper.shape(font_size, 96);
+            img = MyFonts::render_text(shaper, font_size, *myfonts_id);
+            break;
+    }
     return img;
 }

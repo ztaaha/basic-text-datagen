@@ -9,11 +9,16 @@ if (DEFINED ENV{VCPKG_ROOT})
 else()
   message(WARNING "VCPKG_ROOT environment variable not set")
 endif()
+set(VCPKG_LIBRARY_LINKAGE "static")
 
 
 project(renderer)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+if (WIN32)
+  add_definitions(-DNOMINMAX)
+endif()
   
 find_package(Python COMPONENTS Interpreter Development)
 find_package(pybind11 CONFIG REQUIRED)
@@ -21,15 +26,19 @@ find_package(Freetype REQUIRED)
 find_package(harfbuzz CONFIG REQUIRED)
 find_package(Eigen3 NO_MODULE REQUIRED)
 find_package(fmt CONFIG REQUIRED)
-
+find_package(cpr REQUIRED)
+find_package(Stb REQUIRED)
 
 pybind11_add_module(renderer
-  src/bindings.cpp
-  src/render.cpp
-  src/path.cpp
-  src/shaper.cpp
-  src/freetype.cpp
+  src/bindings.cc
+  src/render.cc
+  src/path.cc
+  src/shaper.cc
+  src/freetype.cc
+  src/myfonts.cc
 )
+
+target_include_directories(renderer PRIVATE ${Stb_INCLUDE_DIR})
 
 target_link_libraries(renderer
   PRIVATE
@@ -37,4 +46,5 @@ target_link_libraries(renderer
     harfbuzz::harfbuzz
     Eigen3::Eigen
     fmt::fmt
+    cpr::cpr
 ) 
