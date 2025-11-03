@@ -63,14 +63,6 @@ void invert_inplace(Tensor&& img) {
     }
 }
 
-void invert_inplace(ImageTensor& img) {
-    const auto size = img.size();
-    auto* ptr = img.data();
-    for (size_t i = 0; i < size; ++i) {
-        ptr[i] = 255 - ptr[i];
-    }
-}
-
 
 template<typename Image, typename Dims>
 std::pair<Eigen::array<Eigen::Index, 2>, Eigen::array<Eigen::Index, 2>> nonzero(const Image& img, const Dims& dims, const bool wonb = true) {

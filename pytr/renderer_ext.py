@@ -64,7 +64,6 @@ BASE_HTML = """
 class Renderer(renderer.Renderer):
     def __init__(self):
         super().__init__()
-        self.s = requests.Session()
 
 
     def start_web(self) -> 'Renderer':
@@ -72,15 +71,15 @@ class Renderer(renderer.Renderer):
         return self
     
     def _init_browser(self):
-        self.base_path = os.path.abspath('base.tmp.html').replace('\\', '/')
-        with open(self.base_path, 'w') as f:
+        self._base_path = os.path.abspath('base.tmp.html').replace('\\', '/')
+        with open(self._base_path, 'w') as f:
             f.write(BASE_HTML)
     
         self._playwright = sync_playwright().start()
         for name in ['chromium', 'firefox']:
             browser = getattr(self._playwright, name).launch()
             page = browser.new_page(viewport={'width': 10000, 'height': 10000})
-            page.goto(f"file:///{self.base_path}")
+            page.goto(f"file:///{self._base_path}")
             setattr(self, f"_{name}", browser)
             setattr(self, f"_page_{name}", page)
     
@@ -89,7 +88,7 @@ class Renderer(renderer.Renderer):
             if hasattr(self, f'_{name}'):
                 getattr(self, f'_{name}').close()
         self._playwright.stop()
-        os.remove(self.base_path)
+        os.remove(self._base_path)
 
     def __enter__(self) -> 'Renderer':
         return self.start_web()
@@ -102,13 +101,12 @@ class Renderer(renderer.Renderer):
         ftf = ttLib.TTFont(font_path)
         if 'COLR' in ftf or 'SVG ' in ftf or 'CBDT' in ftf or 'sbix' in ftf:
             raise ValueError("Color fonts are not supported")
-        self.font_path = os.path.abspath(font_path).replace('\\', '/')
-        super().set_font(self.font_path)
+        self._font_path = os.path.abspath(font_path).replace('\\', '/')
+        super().set_font(self._font_path)
 
     def set_text(self, text: str):
         if ' ' in text:
             raise ValueError("Spaces are not supported in text")
-        self.text = text
         super().set_text(text)
 
     def text_paths(self) -> tuple[list[Path], list[float]]:
@@ -146,7 +144,7 @@ class Renderer(renderer.Renderer):
         super().shape_if_needed()
         strings = super().cluster_strings()
         id = "font" + uuid4().hex
-        page.evaluate(ADD_SPANS, [self.font_path, id, size, strings])
+        page.evaluate(ADD_SPANS, [self._font_path, id, size, strings])
         div_locator = page.locator('div')
 
         buf = div_locator.screenshot()

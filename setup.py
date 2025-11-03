@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from setuptools import Extension, setup
 from setuptools.command.build_ext import build_ext
+import platform
 
 class CMakeExtension(Extension):
     def __init__(self, name: str, sourcedir: str = "") -> None:
@@ -23,12 +24,32 @@ class Build(build_ext):
 
         cmake_generator = os.environ.get("CMAKE_GENERATOR", "")
 
+
         cmake_args = [
             f"-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}{os.sep}",
             f"-DPYTHON_EXECUTABLE={sys.executable}",
             f"-DPython_EXECUTABLE={sys.executable}",
             f"-DCMAKE_BUILD_TYPE={cfg}",
         ]
+
+
+        if not os.environ.get('VCPKG_ROOT'):
+            vcpkg_path = Path(__file__).parent / 'vcpkg'
+
+            if not vcpkg_path.exists():
+                subprocess.run(['git', 'clone', 'https://github.com/microsoft/vcpkg.git', str(vcpkg_path)], check=True)
+
+                if platform.system() == 'Windows':
+                    bootstrap_script = vcpkg_path / 'bootstrap-vcpkg.bat'
+                    subprocess.run([str(bootstrap_script)], check=True)
+                else:
+                    bootstrap_script = vcpkg_path / 'bootstrap-vcpkg.sh'
+                    subprocess.run(['bash', str(bootstrap_script)], check=True)
+
+            cmake_args.append(f'-DVCPKG_ROOT={vcpkg_path.absolute()}')
+            
+
+
         build_args = []
 
         if "CMAKE_ARGS" in os.environ:
