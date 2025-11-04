@@ -18,6 +18,12 @@ struct ClusterWindow {
     int end;
 };
 
+
+struct Params {
+    unsigned dpi;
+    bool disable_features;
+};
+
 class Shaper {
 public:
     Shaper();
@@ -30,14 +36,19 @@ public:
     FT_Face get_ft_face() const { return face; }
     const std::string& get_text() const { return text; }
 
+
     void set_font(const std::vector<uint8_t>& data);
     void set_text(const std::string& text);
-    void shape_design();
-    void shape(unsigned font_size, unsigned dpi);
-    void path_data(std::vector<Path>& paths, std::vector<float>& advances);
+    void set_params(const Params& params);
     void done_font();
+
+
+    void shape_design();
+    void shape(unsigned font_size);
+    void path_data(std::vector<Path>& paths, std::vector<float>& advances);
+
+
     std::vector<std::string> cluster_strings() const;
-    int max_advance() const;
     std::vector<ClusterWindow> get_cluster_windows() const;
     TextBox text_size(unsigned* max_cluster_width = nullptr) const;
 private:
@@ -55,4 +66,6 @@ private:
 
     std::string text;
     std::vector<std::pair<unsigned, std::vector<unsigned>>> clusters;
+
+    Params params;
 };

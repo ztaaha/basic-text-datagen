@@ -37,6 +37,8 @@ class Build(build_ext):
             vcpkg_path = Path(__file__).parent / 'vcpkg'
 
             if not vcpkg_path.exists():
+                print("VCPKG_ROOT not set, setting up vcpkg...")
+
                 subprocess.run(['git', 'clone', 'https://github.com/microsoft/vcpkg.git', str(vcpkg_path)], check=True)
 
                 if platform.system() == 'Windows':

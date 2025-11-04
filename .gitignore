@@ -14,3 +14,4 @@ build/
 # temp
 test*.py
 *.txt
+*.ipynb

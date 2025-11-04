@@ -18,6 +18,17 @@ void Renderer::set_font(const std::string& font_path) {
     shaper.set_font(font_data);
 }
 
+void Renderer::set_mode(RenderMode mode, std::optional<std::string> myfonts_id) {
+    this->mode = mode;
+    this->myfonts_id = std::move(myfonts_id);
+
+    Params p;
+    p.disable_features = (mode == RenderMode::MYFONTS);
+    p.dpi = (mode == RenderMode::MYFONTS) ? 96 : 72;
+
+    shaper.set_params(p);
+}
+
 TextPaths Renderer::text_paths() {
     shaper.shape_design();
     std::vector<Path> paths;
@@ -26,17 +37,18 @@ TextPaths Renderer::text_paths() {
     return {paths, advances};
 }
 
-ImageData Renderer::render_text(const unsigned font_size, const RenderMode mode, std::optional<std::string> myfonts_id) {
+ImageData Renderer::render_text(const unsigned font_size) {
     ImageData img;
+    shaper.shape(font_size);
     switch (mode) {
         case RenderMode::FREETYPE:
-            shaper.shape(font_size, 72);
             img = Freetype::render_text(shaper);
             break;
         case RenderMode::MYFONTS:
-            shaper.shape(font_size, 96);
             img = MyFonts::render_text(shaper, font_size, *myfonts_id);
             break;
+        default:
+            throw std::runtime_error("Shielded by Python");
     }
     return img;
 }

@@ -32,13 +32,21 @@ void Shaper::set_text(const std::string& text) {
     clusters.clear();
 }
 
+void Shaper::set_params(const Params& params) {
+    this->params = params;
+    clusters.clear(); // disable_features in Params can change shaping
+}
+
 void Shaper::shape_internal() {
     hb_buffer_reset(buf);
     hb_buffer_add_utf8(buf, text.c_str(), -1, 0, -1);
     hb_buffer_guess_segment_properties(buf);
     hb_shape(font, buf, nullptr, 0);
+    // TODO: handle features
     glyph_info = hb_buffer_get_glyph_infos(buf, &glyph_count);
     glyph_pos = hb_buffer_get_glyph_positions(buf, &glyph_count);
+
+    
     if (clusters.empty()) {
         std::map<unsigned, std::vector<unsigned>> cluster_map;
         for (int i = 0; i < glyph_count; i++) {
@@ -56,8 +64,8 @@ void Shaper::shape_design() {
     shape_internal();
 }
 
-void Shaper::shape(const unsigned font_size, const unsigned dpi) {
-    FT_Set_Char_Size(face, 0, font_size * 64, 0, dpi);
+void Shaper::shape(const unsigned font_size) {
+    FT_Set_Char_Size(face, 0, font_size * 64, 0, params.dpi);
     hb_ft_font_changed(font);
     shape_internal();
 }
@@ -97,18 +105,6 @@ std::vector<std::string> Shaper::cluster_strings() const {
         cluster_strs.emplace_back(text.substr(start, len));
     }
     return cluster_strs;
-}
-
-
-int Shaper::max_advance() const {
-    int max = 0;
-    for (unsigned i = 0; i < glyph_count; i++) {
-        const auto& pos = glyph_pos[i];
-        const auto x_advance = pixel(pos.x_advance);
-        if (x_advance > max)
-            max = x_advance;
-    }
-    return max;
 }
 
 

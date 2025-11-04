@@ -109,33 +109,45 @@ class Renderer(renderer.Renderer):
             raise ValueError("Spaces are not supported in text")
         super().set_text(text)
 
-    def text_paths(self) -> tuple[list[Path], list[float]]:
-        return super().text_paths()
+    def set_mode(self, mode: Literal['freetype', 'chromium', 'firefox', 'myfonts'], myfonts_id: str | None = None):
 
+        if mode in ['freetype', 'chromium', 'firefox']:
+            if myfonts_id is not None:
+                raise ValueError("myfonts_id should be None for modes other than \"myfonts\"")
+            super().set_mode(mode)
+        elif mode == 'myfonts':
+            if myfonts_id is None:
+                raise ValueError("myfonts_id required for mode \"myfonts\"")
+            super().set_mode(mode, myfonts_id)
+        else:
+            raise ValueError(f"Mode \"{mode}\" doesn't exist")
+        
+        self._mode = mode
+        
+
+
+    def text_paths(self) -> tuple[list[Path], list[float]]:
+        """Get design text outlines and advances. len(paths) - 1 == len(advances)"""
+        return super().text_paths()
 
     def render_text(
                 self, 
                 size: int, 
-                mode: Literal['freetype', 'chromium', 'firefox', 'myfonts'],
-                myfonts_id: str | None = None
             ) -> NDArray[np.uint8]:
         """Render text with size and mode
             
             Image and masks as (I, H, W). I = 0 is image, I > 0 are cluster masks.
         """
 
-        if mode == 'freetype':
-            imgs =  super().render_text(size, mode)
-        elif mode == 'chromium' or mode == 'firefox':
-            imgs = self._web_render_text(size, mode)
-        elif mode == 'myfonts':
-            if myfonts_id is None:
-                raise ValueError("myfonts_id required for mode \"myfonts\"")
-            return super().render_text(size, mode, myfonts_id=myfonts_id)
-        else:
-            raise ValueError(f"Mode \"{mode}\" doesn't exist")
-  
+        if self._mode == 'freetype':
+            imgs = super().render_text(size)
+        elif self._mode == 'myfonts':
+            return super().render_text(size)
+        elif self._mode in ['chromium', 'firefox']:
+            imgs = self._web_render_text(size, self._mode)
+
         return trim_img(imgs, white_bg=True)
+
 
     def _web_render_text(self, size, mode):
         assert hasattr(self, f'_page_{mode}'), "Browser not initialized, switch modes or use with statement in Renderer initialization"
